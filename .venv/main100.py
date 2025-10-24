@@ -405,3 +405,34 @@ def place_order_customized():
     cursor.close()
     db.close()
 '''
+
+
+CREATE TABLE food_items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    price DECIMAL(6,2) NOT NULL,
+    description VARCHAR(255)
+);
+
+CREATE TABLE customizations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    base_food VARCHAR(100),
+    addons VARCHAR(255),
+    spice_level VARCHAR(20),
+    total_price DECIMAL(6,2)
+);
+
+CREATE TABLE custom_orders (
+    customer_id INT,
+    food_id INT,
+    total_price DECIMAL(10,2)
+);
+
+CREATE TABLE orders (
+    customer_id INT,
+    food_id INT,
+    total_price DECIMAL(10,2)
+);
+
+
+
