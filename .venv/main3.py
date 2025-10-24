@@ -563,3 +563,13 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+INSERT INTO vip_customers (vip_name, vip_code, email, phone)
+VALUES
+('Alice Johnson', 'VIP1001', 'alice.johnson@example.com', '9876543210'),
+('Bob Smith', 'VIP1002', 'bob.smith@example.com', '9876543211'),
+('Charlie Brown', 'VIP1003', 'charlie.brown@example.com', '9876543212'),
+('Diana Prince', 'VIP1004', 'diana.prince@example.com', '9876543213'),
+('Ethan Hunt', 'VIP1005', 'ethan.hunt@example.com', '9876543214');
