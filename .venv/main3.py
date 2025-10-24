@@ -203,3 +203,38 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+CREATE TABLE vip_customers (
+    vip_id INT AUTO_INCREMENT PRIMARY KEY,
+    vip_name VARCHAR(100) NOT NULL,
+    vip_code VARCHAR(20) UNIQUE NOT NULL,   -- unique code for each VIP
+    email VARCHAR(100),
+    phone VARCHAR(15)
+);
+
+
+
+USE reservation_system;
+
+CREATE TABLE reservations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    reservation_id VARCHAR(8) UNIQUE,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    email VARCHAR(100),
+    phone VARCHAR(15),
+    date DATE,
+    time_in VARCHAR(10),
+    guests INT,
+    extra TEXT,
+    status VARCHAR(20) DEFAULT 'Not Confirmed'
+);
+
+ALTER TABLE reservations
+ADD COLUMN vip_id INT NULL,
+ADD FOREIGN KEY (vip_id) REFERENCES vip_customers(vip_id);
+
+
+
+
