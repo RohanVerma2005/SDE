@@ -3,6 +3,7 @@ import random
 import string
 from datetime import datetime, timedelta
 from datetime import datetime
+from datetime import datetime, date as date_class
 # -----------------------
 # Utility functions
 # -----------------------
@@ -194,6 +195,114 @@ def get_vip_id_by_code():
         return None
 
 
+
+import re
+from datetime import datetime, date as date_class
+
+def create_reservation():
+    print("\n--- Create Reservation ---")
+    first_name = input("Enter First Name: ").strip()
+    last_name = input("Enter Last Name: ").strip()
+
+    # ---------- Email Validation (strict) ----------
+    email = input("Enter Email: ").strip()
+    email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    if not re.match(email_pattern, email):
+        print("⚠️ Invalid email format. Please enter a valid email (e.g., user@example.com).")
+        return
+
+    # ---------- Phone Validation ----------
+    phone = input("Enter Phone Number: ").strip()
+    if not phone.isdigit() or len(phone) != 10:
+        print("⚠️ Invalid phone number. It must be exactly 10 digits and contain only numbers.")
+        return
+
+    # ---------- Date Validation ----------
+    date_input = input("Enter Date (YYYY-MM-DD): ").strip()
+    try:
+        entered_date = datetime.strptime(date_input, "%Y-%m-%d").date()
+        today = date_class.today()
+        if entered_date < today:
+            print("⚠️ You cannot book for a past date. Please choose today or a future date.")
+            return
+    except ValueError:
+        print("⚠️ Invalid date format. Please enter in YYYY-MM-DD format.")
+        return
+
+    # ---------- Guest Count ----------
+    try:
+        guests = int(input("Enter Number of Guests: "))
+        if guests > MAX_GUESTS or guests <= 0:
+            print(f"⚠️ Number of guests must be between 1 and {MAX_GUESTS}.")
+            return
+    except ValueError:
+        print("⚠️ Invalid number of guests.")
+        return
+
+    extra = input("Any Extra Details: ").strip()
+    vip_id = get_vip_id_by_code()
+    is_vip = vip_id is not None
+
+    while True:
+        time_in = get_valid_time()
+
+        # ---------- Conflict Check ----------
+        cursor.execute("""
+            SELECT reservation_id, vip_id FROM reservations
+            WHERE date=%s AND time_in=%s AND status='Confirmed'
+        """, (date_input, time_in))
+        conflict = cursor.fetchone()
+
+        if conflict:
+            existing_id, existing_vip_id = conflict
+            if is_vip and not existing_vip_id:
+                # VIP overrides normal reservation
+                cursor.execute("UPDATE reservations SET status='Cancelled' WHERE reservation_id=%s", (existing_id,))
+                conn.commit()
+                print(f"⚠️ Normal reservation {existing_id} cancelled to make room for VIP.")
+            else:
+                # Suggest next available time
+                suggested_time = add_minutes(time_in, BUFFER_MINUTES)
+                cursor.execute("""
+                    SELECT * FROM reservations
+                    WHERE date=%s AND time_in=%s AND status='Confirmed'
+                """, (date_input, suggested_time))
+                next_conflict = cursor.fetchone()
+                if next_conflict:
+                    suggested_time = add_minutes(time_in, BUFFER_MINUTES * 2)
+
+                print(f"\n⚠️ {time_in} on {date_input} is already booked.")
+                print(f"👉 Next available time suggestion: {suggested_time}")
+                try_again = input("Would you like to try the suggested time? (yes/no): ").lower()
+                if try_again == "yes":
+                    time_in = suggested_time
+                else:
+                    print("\nReservation not confirmed. You can try again later.\n")
+                    return
+
+        # ---------- Confirm Reservation ----------
+        reservation_id = generate_reservation_id()
+        cursor.execute("""
+            INSERT INTO reservations 
+            (reservation_id, first_name, last_name, email, phone, date, time_in, guests, extra, status, vip_id)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,'Confirmed',%s)
+        """, (reservation_id, first_name, last_name, email, phone, date_input, time_in, guests, extra, vip_id))
+        conn.commit()
+
+        print(f"\n✅ Reservation Confirmed Successfully!")
+        print(f"Reservation ID: {reservation_id}")
+        print(f"Date: {date_input} | Time: {time_in}\n")
+        return
+
+
+
+
+
+
+
+
+'''
+
 # Main reservation function
 def create_reservation():
     print("\n--- Create Reservation ---")
@@ -219,6 +328,45 @@ def create_reservation():
         return
 
     extra = input("Any Extra Details: ").strip()
+
+    # print("\n--- Create Reservation ---")
+    # first_name = input("Enter First Name: ").strip()
+    # last_name = input("Enter Last Name: ").strip()
+    # 
+    ---------- Email Validation ----------
+    # email = input("Enter Email: ").strip()
+    # if "@" not in email or not email.endswith(".com"):
+    #     print("⚠️ Invalid email format. Email must contain '@' and end with '.com'.")
+    #     return
+    # 
+    ---------- Phone Validation ----------
+    # phone = input("Enter Phone Number: ").strip()
+    # if not phone.isdigit() or len(phone) != 10:
+    #     print("⚠️ Invalid phone number. It must be exactly 10 digits and contain only numbers.")
+    #     return
+    # 
+    ---------- Date Validation ----------
+    # date_input = input("Enter Date (YYYY-MM-DD): ").strip()
+    # try:
+    #     entered_date = datetime.strptime(date_input, "%Y-%m-%d").date()
+    #     today = date_class.today()
+    #     if entered_date < today:
+    #         print("⚠️ You cannot book for a past date. Please choose today or a future date.")
+    #         return
+    # except ValueError:
+    #     print("⚠️ Invalid date format. Please enter in YYYY-MM-DD format.")
+    #     return
+    # 
+    ---------- Guest Count ----------
+    # try:
+    #     guests = int(input("Enter Number of Guests: "))
+    #     if guests > MAX_GUESTS or guests <= 0:
+    #         print(f"⚠️ Number of guests must be between 1 and {MAX_GUESTS}")
+    #         return
+    # except ValueError:
+    #     print("⚠️ Invalid number of guests.")
+    #     return
+    # extra = input("Any Extra Details: ").strip()
     vip_id = get_vip_id_by_code()
     is_vip = vip_id is not None
 
@@ -273,6 +421,7 @@ def create_reservation():
         return
 
 
+'''
 
 
 
@@ -563,13 +712,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-INSERT INTO vip_customers (vip_name, vip_code, email, phone)
-VALUES
-('Alice Johnson', 'VIP1001', 'alice.johnson@example.com', '9876543210'),
-('Bob Smith', 'VIP1002', 'bob.smith@example.com', '9876543211'),
-('Charlie Brown', 'VIP1003', 'charlie.brown@example.com', '9876543212'),
-('Diana Prince', 'VIP1004', 'diana.prince@example.com', '9876543213'),
-('Ethan Hunt', 'VIP1005', 'ethan.hunt@example.com', '9876543214');
